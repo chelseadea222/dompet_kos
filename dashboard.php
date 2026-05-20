@@ -1,14 +1,16 @@
 <?php 
 require 'koneksi.php'; 
 
-// Memastikan pengguna sudah login
-if (!isset($_SESSION['user_id'])) {
+// --- GANTI PENGECEKAN SESSION MENJADI COOKIE ---
+if (!isset($_COOKIE['user_id'])) {
     header("Location: login.php");
     exit;
 }
 
-$user_id = $_SESSION['user_id'];
-$nama_user = $_SESSION['username'];
+$user_id = $_COOKIE['user_id'];
+$nama_user = $_COOKIE['username'];
+
+// ... (Sisa kode query dan HTML di bawahnya tetap sama persis, tidak perlu diubah) ...
 
 // Tentukan tanggal, bulan, dan tahun saat ini
 $hari_ini = date('Y-m-d');

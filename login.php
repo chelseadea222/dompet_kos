@@ -1,6 +1,11 @@
 <?php
 require 'koneksi.php';
-if (isset($_SESSION['user_id'])) header("Location: dashboard.php");
+
+// Cek apakah sudah ada cookie login, jika ada langsung ke dashboard
+if (isset($_COOKIE['user_id'])) {
+    header("Location: dashboard.php");
+    exit;
+}
 
 if (isset($_POST['login'])) {
     $email = $conn->real_escape_string($_POST['email']);
@@ -10,8 +15,12 @@ if (isset($_POST['login'])) {
     if ($result->num_rows > 0) {
         $user = $result->fetch_assoc();
         if (password_verify($password, $user['password'])) {
-            $_SESSION['user_id'] = $user['id'];
-            $_SESSION['username'] = $user['username'];
+            
+            // --- GANTI SESSION MENJADI COOKIE DI SINI ---
+            // Cookie disimpan selama 1 hari (86400 detik)
+            setcookie('user_id', $user['id'], time() + 86400, "/");
+            setcookie('username', $user['username'], time() + 86400, "/");
+            
             header("Location: dashboard.php");
             exit;
         } else {
