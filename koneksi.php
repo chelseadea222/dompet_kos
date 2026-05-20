@@ -1,54 +1,19 @@
 <?php
-// 1. CEK SESSION: Hanya mulai session jika belum ada session yang aktif
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
+// 1. Masukkan data dari TiDB Cloud di sini
+$host = "gateway01.ap-southeast-1.prod.alicloud.tidbcloud.com"; // Ganti dengan Host TiDB Anda
+$user = "48D8BJbofbESMRv.root"; // Ganti dengan Username TiDB Anda (biasanya ada angka di depannya)
+$pass = "FXTHyWHgbNa2ByDf"; // Ganti dengan Password database TiDB
+$db   = "dompetkos"; // Pastikan Anda sudah membuat database dengan nama ini di TiDB
+$port = 4000; // Port standar TiDB
+
+// 2. Inisialisasi fungsi koneksi
+$conn = mysqli_init();
+
+// 3. Menghubungkan PHP ke TiDB menggunakan mode aman (MYSQLI_CLIENT_SSL)
+// Ini diwajibkan karena server Vercel dan TiDB Cloud berkomunikasi lewat jalur internet publik
+mysqli_real_connect($conn, $host, $user, $pass, $db, $port, NULL, MYSQLI_CLIENT_SSL);
+
+// 4. Memeriksa apakah koneksi berhasil
+if (mysqli_connect_errno()) {
+    die("Koneksi ke TiDB Cloud gagal: " . mysqli_connect_error());
 }
-
-// Koneksi Database
-$host = "localhost";
-$user = "root";
-$pass = "";
-$db   = "dompet_kos"; // Pastikan nama database sesuai dengan yang di PhpMyAdmin
-
-$conn = new mysqli($host, $user, $pass, $db);
-if ($conn->connect_error) {
-    die("Koneksi gagal: " . $conn->connect_error);
-}
-
-// --- LOGIKA NOTIFIKASI ---
-$pesan_notifikasi = [];
-
-// 2. CEK LOGIN: Pastikan query notifikasi hanya berjalan JIKA user sudah login
-if (isset($_SESSION['user_id'])) {
-    $user_id = $_SESSION['user_id'];
-
-    // 1. Cek apakah hari ini belum ada pencatatan
-    $hari_ini = date('Y-m-d');
-    $query_cek_harian = "SELECT COUNT(id) as total FROM transactions WHERE user_id = $user_id AND date = '$hari_ini'";
-    $result_harian = $conn->query($query_cek_harian);
-    
-    // Pastikan query berhasil sebelum fetch data
-    if ($result_harian) {
-        $row_harian = $result_harian->fetch_assoc();
-        if ($row_harian['total'] == 0) {
-            $pesan_notifikasi[] = "⚠️ Kamu belum melakukan pencatatan harian hari ini.";
-        }
-    }
-
-    // 2. Cek pengeluaran mingguan (7 hari terakhir) > 200.000
-    $query_cek_mingguan = "SELECT SUM(amount) as total_pengeluaran 
-                           FROM transactions 
-                           WHERE user_id = $user_id 
-                           AND type = 'pengeluaran' 
-                           AND date >= DATE(NOW()) - INTERVAL 7 DAY";
-    $result_mingguan = $conn->query($query_cek_mingguan);
-    
-    // Pastikan query berhasil sebelum fetch data
-    if ($result_mingguan) {
-        $row_mingguan = $result_mingguan->fetch_assoc();
-        if ($row_mingguan['total_pengeluaran'] > 200000) {
-            $pesan_notifikasi[] = "🚨 Tolong hentikan pengeluaran dan tolong berhemat! (Pengeluaran minggu ini: Rp " . number_format($row_mingguan['total_pengeluaran'], 0, ',', '.') . ")";
-        }
-    }
-}
-?>
