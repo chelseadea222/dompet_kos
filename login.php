@@ -18,9 +18,9 @@ if (isset($_POST['login'])) {
             
             // --- GANTI SESSION MENJADI COOKIE DI SINI ---
             // Cookie disimpan selama 1 hari (86400 detik)
-        setcookie('user_id', (string)$user['id'], time() + 86400, "/");
-        setcookie('username', (string)$user['username'], time() + 86400, "/");            
-            header("Location: dashboard.php");
+// Tambahkan awalan spasi kosong "", lalu true, true untuk keamanan Vercel
+setcookie('user_id', (string)$user['id'], time() + 86400, "/", "", true, true);
+setcookie('username', (string)$user['username'], time() + 86400, "/", "", true, true);            header("Location: dashboard.php");
             exit;
         } else {
             $error = "Password salah!";
