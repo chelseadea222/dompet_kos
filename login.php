@@ -1,8 +1,7 @@
 <?php
 require 'koneksi.php';
 
-// Cek apakah sudah ada cookie login, jika ada langsung ke dashboard
-if (isset($_COOKIE['user_id'])) {
+if (isset($_SESSION['user_id'])) {
     header("Location: dashboard.php");
     exit;
 }
@@ -15,12 +14,11 @@ if (isset($_POST['login'])) {
     if ($result->num_rows > 0) {
         $user = $result->fetch_assoc();
         if (password_verify($password, $user['password'])) {
+            // Gunakan Session asal, bukan Cookie
+            $_SESSION['user_id'] = $user['id'];
+            $_SESSION['username'] = $user['username'];
             
-            // --- GANTI SESSION MENJADI COOKIE DI SINI ---
-            // Cookie disimpan selama 1 hari (86400 detik)
-// Tambahkan awalan spasi kosong "", lalu true, true untuk keamanan Vercel
-setcookie('user_id', (string)$user['id'], time() + 86400, "/", "", true, true);
-setcookie('username', (string)$user['username'], time() + 86400, "/", "", true, true);            header("Location: dashboard.php");
+            header("Location: dashboard.php");
             exit;
         } else {
             $error = "Password salah!";

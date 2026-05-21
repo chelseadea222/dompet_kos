@@ -1,6 +1,10 @@
 <?php
 require 'koneksi.php';
-if (!isset($_SESSION['user_id'])) header("Location: login.php");
+
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php");
+    exit;
+}
 
 $user_id = $_SESSION['user_id'];
 
@@ -9,17 +13,14 @@ $query = $conn->query("SELECT * FROM users WHERE id = '$user_id'");
 if ($query && $query->num_rows > 0) {
     $user = $query->fetch_assoc();
     $email_user = $user['email'];
-    
-    // Logika tampil foto profil
     $foto_profil = (!empty($user['profile_pic']) && file_exists('uploads/' . $user['profile_pic'])) 
-                   ? 'uploads/' . $user['profile_pic'] 
-                   : null;
+                   ? 'uploads/' . $user['profile_pic'] : null;
 } else {
     $email_user = "Email tidak ditemukan"; 
     $foto_profil = null;
 }
 
-// Logika Logout
+// Logika Logout (Mematikan Session)
 if (isset($_GET['logout'])) {
     session_destroy();
     header("Location: login.php");
