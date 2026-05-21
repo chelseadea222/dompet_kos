@@ -1,8 +1,11 @@
 <?php
 require 'koneksi.php';
-if (!isset($_SESSION['user_id'])) header("Location: login.php");
+if (!isset($_COOKIE['user_id'])) {
+    header("Location: login.php");
+    exit;
+}
 
-$user_id = $_SESSION['user_id'];
+$user_id = $_COOKIE['user_id'];
 
 // Ambil data user dari database
 $query = $conn->query("SELECT * FROM users WHERE id = '$user_id'");
@@ -19,9 +22,10 @@ if ($query && $query->num_rows > 0) {
     $foto_profil = null;
 }
 
-// Logika Logout
+// Logika Logout (Menghapus Cookie)
 if (isset($_GET['logout'])) {
-    session_destroy();
+    setcookie('user_id', '', time() - 3600, "/");
+    setcookie('username', '', time() - 3600, "/");
     header("Location: login.php");
     exit;
 }
@@ -79,7 +83,7 @@ if (isset($_GET['logout'])) {
                 <?php endif; ?>
             </div>
             
-            <h2 class="text-xl font-bold drop-shadow-md tracking-wider dark:text-gray-200"><?= htmlspecialchars($_SESSION['username']) ?></h2>
+            <h2 class="text-xl font-bold drop-shadow-md tracking-wider dark:text-gray-200"><?= htmlspecialchars($_COOKIE['username']) ?></h2>
             
             <a href="edit_profil.php" class="mt-3 text-xs font-bold bg-white/30 dark:bg-black/30 hover:bg-white/50 dark:hover:bg-black/50 text-white dark:text-gray-300 px-5 py-2 rounded-full backdrop-blur-md transition shadow-md border border-white/20 dark:border-white/5">
                 <i class="fas fa-pen mr-1"></i> Edit Profil
