@@ -2,12 +2,12 @@
 require 'koneksi.php';
 
 // 1. PASTIKAN USER SUDAH LOGIN
-if (!isset($_SESSION['user_id'])) {
+if (!isset($_COOKIE['user_id'])) {
     header("Location: login.php");
     exit;
 }
 
-$user_id = $_SESSION['user_id'];
+$user_id = $_COOKIE['user_id'];
 
 // 2. AMBIL DATA USER TERBARU DARI DATABASE
 $query = $conn->query("SELECT * FROM users WHERE id = '$user_id'");
@@ -96,8 +96,8 @@ if (isset($_POST['update_profil'])) {
             // Eksekusi query ke database
             // Eksekusi query ke database
             if ($conn->query($sql)) {
-                // Perbarui nama di session agar nama di dashboard langsung berubah
-                $_SESSION['username'] = $username_baru;
+                // Perbarui nama di $_COOKIE agar nama di dashboard langsung berubah
+                $_COOKIE['username'] = $username_baru;
                 
                 // MENGARAHKAN KEMBALI KE HALAMAN PROFIL
                 echo "<script>

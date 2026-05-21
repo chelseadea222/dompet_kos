@@ -18,6 +18,12 @@ if (isset($_POST['login'])) {
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['username'] = $user['username'];
             
+
+            // --- GANTI SESSION MENJADI COOKIE DI SINI ---
+            // Cookie disimpan selama 1 hari (86400 detik)
+        setcookie('user_id', (string)$user['id'], time() + 86400, "/");
+        setcookie('username', (string)$user['username'], time() + 86400, "/");            
+
             header("Location: dashboard.php");
             exit;
         } else {

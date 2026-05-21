@@ -1,8 +1,11 @@
 <?php
-session_start();
 require 'koneksi.php';
+// Ganti session jadi cookie
+if (!isset($_COOKIE['user_id'])) { header("Location: login.php"); exit; }
+$user_id = $_COOKIE['user_id'];
 
-$user_id = $_SESSION['user_id'];
+// Nama file yang akan diunduh
+// ... (Sisa kode di bawahnya biarkan saja) ...
 
 // Nama file yang akan diunduh
 $filename = "Riwayat_Keuangan_" . date('Ymd') . ".csv";
