@@ -1,33 +1,40 @@
 <?php
+// 1. Jalankan session di baris paling awal
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 require 'koneksi.php';
 
-if (!isset($_COOKIE['user_id'])) {
+// 2. Pindahkan logika logout ke atas agar langsung diproses sebelum query database
+if (isset($_GET['logout'])) {
+    session_unset();
+    session_destroy();
+    header("Location: login.php");
+    exit; // Wajib diberi exit agar pengalihan halaman sukses
+}
 
+// 3. Proteksi Halaman (Wajib diberi exit)
+if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit;
 }
 
-$user_id = $_COOKIE['user_id'];
+$user_id = $_SESSION['user_id'];
 
 // Ambil data user dari database
 $query = $conn->query("SELECT * FROM users WHERE id = '$user_id'");
 if ($query && $query->num_rows > 0) {
     $user = $query->fetch_assoc();
     $email_user = $user['email'];
+    
+    // Logika tampil foto profil
     $foto_profil = (!empty($user['profile_pic']) && file_exists('uploads/' . $user['profile_pic'])) 
-                   ? 'uploads/' . $user['profile_pic'] : null;
+                   ? 'uploads/' . $user['profile_pic'] 
+                   : null;
 } else {
     $email_user = "Email tidak ditemukan"; 
     $foto_profil = null;
-}
-
-// Logika Logout (Mematikan Session)
-
-if (isset($_GET['logout'])) {
-    setcookie('user_id', '', time() - 3600, "/");
-    setcookie('username', '', time() - 3600, "/");
-    header("Location: login.php");
-    exit;
 }
 ?>
 <!DOCTYPE html>
@@ -53,16 +60,8 @@ if (isset($_GET['logout'])) {
             transition: background 0.4s ease-in-out;
             box-shadow: 0 0 15px rgba(0,0,0,0.1);
         } 
-        
-        /* MODE GELAP: Warna latar belakang biru dibuat redup/gelap */
-        html.dark body {
-            background-color: #020617; 
-        }
-        html.dark .app {
-            /* Biru terang menjadi Biru Tua Redup */
-            background: linear-gradient(to bottom, #1e3a8a, #0f172a);
-            box-shadow: 0 0 20px rgba(0,0,0,0.8);
-        }
+        html.dark body { background-color: #020617; }
+        html.dark .app { background: linear-gradient(to bottom, #1e3a8a, #0f172a); box-shadow: 0 0 20px rgba(0,0,0,0.8); }
     </style>
 </head>
 <body class="transition-colors duration-300 dark:bg-gray-900">
@@ -83,7 +82,7 @@ if (isset($_GET['logout'])) {
                 <?php endif; ?>
             </div>
             
-            <h2 class="text-xl font-bold drop-shadow-md tracking-wider dark:text-gray-200"><?= htmlspecialchars($_COOKIE['username']) ?></h2>
+            <h2 class="text-xl font-bold drop-shadow-md tracking-wider dark:text-gray-200"><?= htmlspecialchars($_SESSION['username']) ?></h2>
             
             <a href="edit_profil.php" class="mt-3 text-xs font-bold bg-white/30 dark:bg-black/30 hover:bg-white/50 dark:hover:bg-black/50 text-white dark:text-gray-300 px-5 py-2 rounded-full backdrop-blur-md transition shadow-md border border-white/20 dark:border-white/5">
                 <i class="fas fa-pen mr-1"></i> Edit Profil
