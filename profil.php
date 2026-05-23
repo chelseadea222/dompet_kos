@@ -1,5 +1,4 @@
 <?php
-
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
 require 'koneksi.php';
 
@@ -9,29 +8,6 @@ if (isset($_GET['logout'])) {
 }
 
 if (!isset($_SESSION['user_id'])) { header("Location: login.php"); exit; }
-
-// 1. Jalankan session di baris paling awal
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
-require 'koneksi.php';
-
-// 2. Pindahkan logika logout ke atas agar langsung diproses sebelum query database
-if (isset($_GET['logout'])) {
-    session_unset();
-    session_destroy();
-    header("Location: login.php");
-    exit; // Wajib diberi exit agar pengalihan halaman sukses
-}
-
-// 3. Proteksi Halaman (Wajib diberi exit)
-if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
-    exit;
-}
-
-
 $user_id = $_SESSION['user_id'];
 
 $query = $conn->query("SELECT * FROM users WHERE id = '$user_id'");
@@ -41,11 +17,7 @@ if ($query && $query->num_rows > 0) {
     $foto_profil = (!empty($user['profile_pic']) && file_exists('uploads/' . $user['profile_pic'])) ? 'uploads/' . $user['profile_pic'] : null;
 } else { 
     $email_user = "Email tidak ditemukan"; 
-
     $foto_profil = null; 
-
-    $foto_profil = null;
-
 }
 ?>
 <!DOCTYPE html>
@@ -57,24 +29,9 @@ if ($query && $query->num_rows > 0) {
     <script src="https://cdn.tailwindcss.com"></script>
     <script>tailwind.config = { darkMode: 'class' }</script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<<<<<<< HEAD
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
-
-    <style> 
-        body { display: flex; justify-content: center; background-color: #f3f4f6; } 
-        .app { 
-            max-width: 414px; min-height: 100vh; width: 100%; 
-            background: linear-gradient(to bottom, #4f8cf6, #b4eedb); 
-            position: relative;
-            padding-bottom: 100px; 
-            transition: background 0.4s ease-in-out;
-            box-shadow: 0 0 15px rgba(0,0,0,0.1);
-        } 
-        html.dark body { background-color: #020617; }
-        html.dark .app { background: linear-gradient(to bottom, #1e3a8a, #0f172a); box-shadow: 0 0 20px rgba(0,0,0,0.8); }
-
     </style>
 </head>
 <body class="bg-[#f4f7fe] dark:bg-[#0f172a] transition-colors duration-300 md:flex min-h-screen text-gray-800 dark:text-gray-200">
@@ -85,20 +42,12 @@ if ($query && $query->num_rows > 0) {
             <div class="w-12 h-12 bg-gradient-to-br from-[#2a40a3] to-[#4f8cf6] rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30">
                 <i class="fas fa-wallet text-white text-xl"></i>
             </div>
-
             <h2 class="text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white">DompetKos</h2>
         </div>
         <nav class="flex-1 px-5 mt-6 space-y-2">
             <p class="px-4 text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-4">Menu Utama</p>
             <a href="dashboard.php" class="flex items-center gap-4 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:text-[#2a40a3] dark:hover:text-white px-5 py-4 rounded-2xl font-semibold transition group">
                 <i class="fas fa-home text-lg w-5 text-center group-hover:scale-110 transition-transform"></i> Beranda
-
-            
-            <h2 class="text-xl font-bold drop-shadow-md tracking-wider dark:text-gray-200"><?= htmlspecialchars($_SESSION['username']) ?></h2>
-            
-            <a href="edit_profil.php" class="mt-3 text-xs font-bold bg-white/30 dark:bg-black/30 hover:bg-white/50 dark:hover:bg-black/50 text-white dark:text-gray-300 px-5 py-2 rounded-full backdrop-blur-md transition shadow-md border border-white/20 dark:border-white/5">
-                <i class="fas fa-pen mr-1"></i> Edit Profil
-
             </a>
             <a href="pencatatan.php" class="flex items-center gap-4 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:text-[#2a40a3] dark:hover:text-white px-5 py-4 rounded-2xl font-bold transition group">
                 <i class="fas fa-pen text-lg w-5 text-center group-hover:scale-110 transition-transform"></i> Catat

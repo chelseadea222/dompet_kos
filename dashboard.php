@@ -10,8 +10,6 @@ if (!isset($_SESSION['user_id'])) {
 $user_id = $_SESSION['user_id'];
 $nama_user = $_SESSION['username'];
 
-
-// Tentukan tanggal, bulan, dan tahun saat ini
 $hari_ini = date('Y-m-d');
 $bulan_sekarang = date('m');
 $tahun_sekarang = date('Y');
