@@ -6,6 +6,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 // Jika sudah login, langsung ke dashboard
+
 if (isset($_SESSION['user_id'])) {
     header("Location: dashboard.php");
     exit;
@@ -25,9 +26,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($result->num_rows > 0) {
         $user = $result->fetch_assoc();
         if (password_verify($password, $user['password'])) {
+
             // Jika login sukses, buat sesi dan pindah ke dashboard
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['username'] = $user['username'];
+
+            // Gunakan Session asal, bukan Cookie
+            $_SESSION['user_id'] = $user['id'];
+            $_SESSION['username'] = $user['username'];
+            
+
+            // --- GANTI SESSION MENJADI COOKIE DI SINI ---
+            // Cookie disimpan selama 1 hari (86400 detik)
+        setcookie('user_id', (string)$user['id'], time() + 86400, "/");
+        setcookie('username', (string)$user['username'], time() + 86400, "/");            
+
             header("Location: dashboard.php");
             exit;
         } else {
