@@ -1,8 +1,4 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
 $host = "gateway01.ap-southeast-1.prod.alicloud.tidbcloud.com"; 
 $user = "48D8BJbofbESMRv.root";
 $pass = "0aaL5V7vTVUnnPtZ";
@@ -22,5 +18,3 @@ $berhasil = $conn->real_connect($host, $user, $pass, $db, $port, NULL, MYSQLI_CL
 if (!$berhasil) {
     die("Koneksi database gagal: " . mysqli_connect_error());
 }
-
-?>
