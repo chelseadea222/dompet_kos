@@ -1,8 +1,12 @@
 <?php
 require 'koneksi.php';
 
-if (!isset($_SESSION['user_id'])) { header("Location: login.php"); exit; }
-$user_id = $_SESSION['user_id'];
+// Cek login via COOKIE
+if (!isset($_COOKIE['user_id'])) {
+    header("Location: login.php");
+    exit;
+}
+$user_id = $_COOKIE['user_id'];
 
 if (isset($_GET['hapus'])) {
     $id_hapus = $conn->real_escape_string($_GET['hapus']);
@@ -22,7 +26,7 @@ if (isset($_GET['m']) && isset($_GET['y'])) {
 $prev_m = $bulan_tampil - 1; $prev_y = $tahun_tampil; if ($prev_m == 0) { $prev_m = 12; $prev_y--; }
 $next_m = $bulan_tampil + 1; $next_y = $tahun_tampil; if ($next_m == 13) { $next_m = 1; $next_y++; }
 
-$query = "SELECT * FROM transactions WHERE user_id = '$user_id' AND date = '$selected_date' ORDER BY id DESC";
+$query  = "SELECT * FROM transactions WHERE user_id = '$user_id' AND date = '$selected_date' ORDER BY id DESC";
 $result = $conn->query($query);
 
 $q_sum = $conn->query("SELECT type, SUM(amount) as total FROM transactions WHERE user_id='$user_id' AND date='$selected_date' GROUP BY type");
@@ -31,21 +35,21 @@ if ($q_sum) { while($s = $q_sum->fetch_assoc()) { if($s['type']=='pemasukan') $t
 
 $nama_bulan = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
 $ikon_kategori = [
-    'Makanan'     => ['icon' => 'fa-hamburger',     'color' => '#3b82f6'],
-    'Transportasi'=> ['icon' => 'fa-motorcycle',    'color' => '#818cf8'],
-    'Belanja'     => ['icon' => 'fa-shopping-cart', 'color' => '#6366f1'],
-    'Laundry'     => ['icon' => 'fa-tshirt',        'color' => '#1e3a8a'],
-    'Listrik'     => ['icon' => 'fa-bolt',          'color' => '#2563eb'],
-    'Nongkrong'   => ['icon' => 'fa-coffee',        'color' => '#38bdf8'],
-    'Hiburan'     => ['icon' => 'fa-gamepad',       'color' => '#6366f1'],
-    'Gaji'        => ['icon' => 'fa-money-bill-wave','color' => '#10b981'],
-    'Freelance'   => ['icon' => 'fa-laptop-code',   'color' => '#059669'],
-    'Beasiswa'    => ['icon' => 'fa-graduation-cap','color' => '#0d9488'],
-    'Bisnis'      => ['icon' => 'fa-store',         'color' => '#0891b2'],
-    'Investasi'   => ['icon' => 'fa-chart-line',    'color' => '#0284c7'],
-    'Hadiah'      => ['icon' => 'fa-gift',          'color' => '#7c3aed'],
-    'Transfer'    => ['icon' => 'fa-exchange-alt',  'color' => '#4f46e5'],
-    'Lainnya'     => ['icon' => 'fa-wallet',        'color' => '#93c5fd'],
+    'Makanan'      => ['icon' => 'fa-hamburger',      'color' => '#3b82f6'],
+    'Transportasi' => ['icon' => 'fa-motorcycle',     'color' => '#818cf8'],
+    'Belanja'      => ['icon' => 'fa-shopping-cart',  'color' => '#6366f1'],
+    'Laundry'      => ['icon' => 'fa-tshirt',         'color' => '#1e3a8a'],
+    'Listrik'      => ['icon' => 'fa-bolt',           'color' => '#2563eb'],
+    'Nongkrong'    => ['icon' => 'fa-coffee',         'color' => '#38bdf8'],
+    'Hiburan'      => ['icon' => 'fa-gamepad',        'color' => '#6366f1'],
+    'Gaji'         => ['icon' => 'fa-money-bill-wave','color' => '#10b981'],
+    'Freelance'    => ['icon' => 'fa-laptop-code',    'color' => '#059669'],
+    'Beasiswa'     => ['icon' => 'fa-graduation-cap', 'color' => '#0d9488'],
+    'Bisnis'       => ['icon' => 'fa-store',          'color' => '#0891b2'],
+    'Investasi'    => ['icon' => 'fa-chart-line',     'color' => '#0284c7'],
+    'Hadiah'       => ['icon' => 'fa-gift',           'color' => '#7c3aed'],
+    'Transfer'     => ['icon' => 'fa-exchange-alt',   'color' => '#4f46e5'],
+    'Lainnya'      => ['icon' => 'fa-wallet',         'color' => '#93c5fd'],
 ];
 ?>
 <!DOCTYPE html>
@@ -151,14 +155,14 @@ $ikon_kategori = [
                 <div class="grid grid-cols-7 text-center text-xs gap-y-1.5 font-semibold">
                     <?php
                     $first_day_of_month = strtotime("$tahun_tampil-$bulan_tampil-01");
-                    $day_of_week = date('N', $first_day_of_month);
+                    $day_of_week  = date('N', $first_day_of_month);
                     $days_in_month = date('t', $first_day_of_month);
                     $offset = $day_of_week - 1;
                     for ($i = 0; $i < $offset; $i++) { echo "<div></div>"; }
                     for ($day = 1; $day <= $days_in_month; $day++) {
-                        $loop_date = sprintf("%04d-%02d-%02d", $tahun_tampil, $bulan_tampil, $day);
+                        $loop_date   = sprintf("%04d-%02d-%02d", $tahun_tampil, $bulan_tampil, $day);
                         $is_selected = ($loop_date == $selected_date);
-                        $is_today = ($loop_date == date('Y-m-d'));
+                        $is_today    = ($loop_date == date('Y-m-d'));
                         if ($is_selected) {
                             $style = "bg-gradient-to-br from-[#2a40a3] to-[#4f8cf6] text-white shadow-md shadow-blue-500/30";
                         } elseif ($is_today) {
@@ -170,8 +174,6 @@ $ikon_kategori = [
                     }
                     ?>
                 </div>
-
-                <!-- Legenda -->
                 <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 flex items-center gap-2 flex-wrap">
                     <div class="w-2.5 h-2.5 rounded-full bg-gradient-to-br from-[#2a40a3] to-[#4f8cf6]"></div>
                     <span class="text-[11px] text-gray-400 dark:text-gray-500 font-semibold">Dipilih</span>
@@ -196,10 +198,10 @@ $ikon_kategori = [
                     <?php
                     $result->data_seek(0);
                     while($row = $result->fetch_assoc()):
-                        $kat = $row['category'];
-                        $meta = isset($ikon_kategori[$kat]) ? $ikon_kategori[$kat] : ['icon'=>'fa-wallet','color'=>'#93c5fd'];
-                        $ikon = $meta['icon'];
-                        $warna = $meta['color'];
+                        $kat    = $row['category'];
+                        $meta   = isset($ikon_kategori[$kat]) ? $ikon_kategori[$kat] : ['icon'=>'fa-wallet','color'=>'#93c5fd'];
+                        $ikon   = $meta['icon'];
+                        $warna  = $meta['color'];
                         $is_masuk = $row['type'] == 'pemasukan';
                     ?>
                         <div class="bg-white dark:bg-[#1e293b] rounded-2xl p-4 flex items-center gap-4 shadow-[0_2px_15px_rgb(0,0,0,0.04)] border border-gray-50 dark:border-gray-700 hover:shadow-[0_4px_20px_rgb(0,0,0,0.08)] transition-shadow">

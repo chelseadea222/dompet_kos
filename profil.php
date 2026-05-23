@@ -1,23 +1,31 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) { session_start(); }
 require 'koneksi.php';
 
+// Logout: hapus semua cookie
 if (isset($_GET['logout'])) {
-    session_unset(); session_destroy();
-    header("Location: login.php"); exit;
+    setcookie('user_id',  '', time() - 3600, "/");
+    setcookie('username', '', time() - 3600, "/");
+    header("Location: login.php");
+    exit;
 }
 
-if (!isset($_SESSION['user_id'])) { header("Location: login.php"); exit; }
-$user_id = $_SESSION['user_id'];
+// Cek login via COOKIE
+if (!isset($_COOKIE['user_id'])) {
+    header("Location: login.php");
+    exit;
+}
+$user_id = $_COOKIE['user_id'];
 
 $query = $conn->query("SELECT * FROM users WHERE id = '$user_id'");
 if ($query && $query->num_rows > 0) {
-    $user = $query->fetch_assoc(); 
-    $email_user = $user['email'];
+    $user        = $query->fetch_assoc();
+    $email_user  = $user['email'];
+    $nama_user   = $user['username'];
     $foto_profil = (!empty($user['profile_pic']) && file_exists('uploads/' . $user['profile_pic'])) ? 'uploads/' . $user['profile_pic'] : null;
-} else { 
-    $email_user = "Email tidak ditemukan"; 
-    $foto_profil = null; 
+} else {
+    $email_user  = "Email tidak ditemukan";
+    $nama_user   = $_COOKIE['username'] ?? 'Pengguna';
+    $foto_profil = null;
 }
 ?>
 <!DOCTYPE html>
@@ -75,7 +83,7 @@ if ($query && $query->num_rows > 0) {
                     <?php endif; ?>
                 </div>
                 <h2 class="text-xl font-extrabold text-gray-900 dark:text-white tracking-wide">
-                    <?= htmlspecialchars($_SESSION['username']) ?>
+                    <?= htmlspecialchars($nama_user) ?>
                 </h2>
                 <p class="text-sm text-gray-400 dark:text-gray-500 font-medium mt-1"><?= htmlspecialchars($email_user) ?></p>
                 <a href="edit_profil.php" class="mt-4 text-xs font-bold bg-gradient-to-r from-[#2a40a3] to-[#4f8cf6] hover:opacity-90 text-white px-6 py-2.5 rounded-full transition shadow-lg shadow-blue-500/20">
@@ -105,9 +113,7 @@ if ($query && $query->num_rows > 0) {
                         <div class="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
                             <i class="fas fa-moon text-[#2a40a3] dark:text-blue-400"></i>
                         </div>
-                        <div>
-                            <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Mode Gelap</span>
-                        </div>
+                        <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Mode Gelap</span>
                     </div>
                     <label class="relative inline-flex items-center cursor-pointer">
                         <input type="checkbox" id="darkModeToggle" class="sr-only peer">
@@ -123,7 +129,6 @@ if ($query && $query->num_rows > 0) {
                         </div>
                         <div class="min-w-0">
                             <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Notifikasi Harian</span>
-                            <!-- Status notifikasi (dinamis via JS) -->
                             <p id="notif-status-text" class="text-[10px] font-medium text-gray-400 mt-0.5 truncate">Memuat status...</p>
                         </div>
                     </div>
@@ -133,12 +138,11 @@ if ($query && $query->num_rows > 0) {
                     </label>
                 </div>
 
-                <!-- TOAST NOTIFIKASI (muncul saat ada info) -->
+                <!-- TOAST -->
                 <div id="notif-toast" class="hidden items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold border">
                     <i id="notif-toast-icon" class="flex-shrink-0"></i>
                     <span id="notif-toast-msg"></span>
                 </div>
-
             </div>
 
             <!-- TOMBOL LOGOUT -->
@@ -171,13 +175,9 @@ if ($query && $query->num_rows > 0) {
     </div>
 
 <script>
-// ═══════════════════════════════════════════════
-// 1. DARK MODE
-// ═══════════════════════════════════════════════
+// DARK MODE
 const darkToggle = document.getElementById('darkModeToggle');
 const html = document.documentElement;
-
-// Baca state tersimpan saat halaman load
 if (localStorage.getItem('theme') === 'dark') {
     html.classList.add('dark');
     darkToggle.checked = true;
@@ -185,210 +185,107 @@ if (localStorage.getItem('theme') === 'dark') {
     html.classList.remove('dark');
     darkToggle.checked = false;
 }
-
 darkToggle.addEventListener('change', function () {
-    if (this.checked) {
-        html.classList.add('dark');
-        localStorage.setItem('theme', 'dark');
-    } else {
-        html.classList.remove('dark');
-        localStorage.setItem('theme', 'light');
-    }
+    if (this.checked) { html.classList.add('dark'); localStorage.setItem('theme', 'dark'); }
+    else { html.classList.remove('dark'); localStorage.setItem('theme', 'light'); }
 });
 
-
-// ═══════════════════════════════════════════════
-// 2. NOTIFIKASI HARIAN
-// ═══════════════════════════════════════════════
+// NOTIFIKASI HARIAN
 const notifToggle    = document.getElementById('notifToggle');
 const notifStatusTxt = document.getElementById('notif-status-text');
 const notifToast     = document.getElementById('notif-toast');
 const notifToastIcon = document.getElementById('notif-toast-icon');
 const notifToastMsg  = document.getElementById('notif-toast-msg');
-
-// Jam pengingat harian (default: 20:00)
-const JAM_NOTIFIKASI = 20;
+const JAM_NOTIFIKASI   = 20;
 const MENIT_NOTIFIKASI = 0;
 
-// ── Tampilkan toast info ──────────────────────
 function showToast(type, message) {
     notifToast.classList.remove('hidden', 'flex',
-        'bg-green-50','border-green-200','text-green-700',
-        'dark:bg-green-900/20','dark:border-green-800/40','dark:text-green-400',
-        'bg-red-50','border-red-200','text-red-700',
-        'dark:bg-red-900/20','dark:border-red-800/40','dark:text-red-400',
-        'bg-amber-50','border-amber-200','text-amber-700',
-        'dark:bg-amber-900/20','dark:border-amber-800/40','dark:text-amber-400',
-        'bg-blue-50','border-blue-200','text-blue-700',
-        'dark:bg-blue-900/20','dark:border-blue-800/40','dark:text-blue-400'
+        'bg-green-50','border-green-200','text-green-700','dark:bg-green-900/20','dark:border-green-800/40','dark:text-green-400',
+        'bg-red-50','border-red-200','text-red-700','dark:bg-red-900/20','dark:border-red-800/40','dark:text-red-400',
+        'bg-amber-50','border-amber-200','text-amber-700','dark:bg-amber-900/20','dark:border-amber-800/40','dark:text-amber-400',
+        'bg-blue-50','border-blue-200','text-blue-700','dark:bg-blue-900/20','dark:border-blue-800/40','dark:text-blue-400'
     );
-
     const styles = {
-        success: ['bg-green-50','border-green-200','text-green-700','dark:bg-green-900/20','dark:border-green-800/40','dark:text-green-400', 'fas fa-check-circle'],
-        error:   ['bg-red-50','border-red-200','text-red-700','dark:bg-red-900/20','dark:border-red-800/40','dark:text-red-400', 'fas fa-times-circle'],
-        warning: ['bg-amber-50','border-amber-200','text-amber-700','dark:bg-amber-900/20','dark:border-amber-800/40','dark:text-amber-400', 'fas fa-exclamation-circle'],
-        info:    ['bg-blue-50','border-blue-200','text-blue-700','dark:bg-blue-900/20','dark:border-blue-800/40','dark:text-blue-400', 'fas fa-info-circle'],
+        success: ['bg-green-50','border-green-200','text-green-700','dark:bg-green-900/20','dark:border-green-800/40','dark:text-green-400','fas fa-check-circle'],
+        error:   ['bg-red-50','border-red-200','text-red-700','dark:bg-red-900/20','dark:border-red-800/40','dark:text-red-400','fas fa-times-circle'],
+        warning: ['bg-amber-50','border-amber-200','text-amber-700','dark:bg-amber-900/20','dark:border-amber-800/40','dark:text-amber-400','fas fa-exclamation-circle'],
+        info:    ['bg-blue-50','border-blue-200','text-blue-700','dark:bg-blue-900/20','dark:border-blue-800/40','dark:text-blue-400','fas fa-info-circle'],
     };
     const s = styles[type] || styles.info;
     notifToast.classList.add('flex', ...s.slice(0, 6));
     notifToastIcon.className = s[6] + ' text-base flex-shrink-0';
     notifToastMsg.textContent = message;
-
-    // Otomatis sembunyikan setelah 5 detik
     clearTimeout(notifToast._hideTimer);
     notifToast._hideTimer = setTimeout(() => {
         notifToast.classList.add('hidden');
         notifToast.classList.remove('flex');
     }, 5000);
 }
-
-// ── Update label status ──────────────────────
 function updateStatusLabel(aktif) {
-    if (aktif) {
-        notifStatusTxt.textContent = `Aktif · pengingat jam ${JAM_NOTIFIKASI.toString().padStart(2,'0')}.${MENIT_NOTIFIKASI.toString().padStart(2,'0')} setiap hari`;
-    } else {
-        notifStatusTxt.textContent = 'Nonaktif';
-    }
+    notifStatusTxt.textContent = aktif
+        ? `Aktif · pengingat jam ${JAM_NOTIFIKASI.toString().padStart(2,'0')}.${MENIT_NOTIFIKASI.toString().padStart(2,'0')} setiap hari`
+        : 'Nonaktif';
 }
-
-// ── Jadwalkan notifikasi harian ──────────────
 let notifTimer = null;
-
 function jadwalkanNotifikasi() {
     clearTimeout(notifTimer);
-
     const sekarang = new Date();
     const target   = new Date();
     target.setHours(JAM_NOTIFIKASI, MENIT_NOTIFIKASI, 0, 0);
-
-    // Kalau jam target sudah lewat hari ini, jadwalkan besok
-    if (target <= sekarang) {
-        target.setDate(target.getDate() + 1);
-    }
-
+    if (target <= sekarang) target.setDate(target.getDate() + 1);
     const selisihMs = target - sekarang;
-
     notifTimer = setTimeout(() => {
         kirimNotifikasi();
-        // Ulangi setiap 24 jam
         setInterval(kirimNotifikasi, 24 * 60 * 60 * 1000);
     }, selisihMs);
-
-    console.log(`[DompetKos] Notifikasi dijadwalkan dalam ${Math.round(selisihMs/1000/60)} menit.`);
 }
-
-// ── Kirim browser notification ───────────────
 function kirimNotifikasi() {
     if (Notification.permission !== 'granted') return;
     if (localStorage.getItem('notif_aktif') !== 'true') return;
-
     const notif = new Notification('💰 DompetKos — Pengingat Harian', {
-        body: 'Jangan lupa catat keuanganmu hari ini! Saldo kamu menunggu untuk diperbarui.',
-        icon: 'favicon.ico',  // ganti dengan path ikon aplikasimu
-        badge: 'favicon.ico',
-        tag: 'dompetkos-harian', // mencegah notif duplikat
-        renotify: false,
+        body: 'Jangan lupa catat keuanganmu hari ini!',
+        icon: 'favicon.ico', tag: 'dompetkos-harian', renotify: false,
     });
-
-    // Klik notifikasi → buka pencatatan
-    notif.onclick = function () {
-        window.focus();
-        window.location.href = 'pencatatan.php';
-        notif.close();
-    };
+    notif.onclick = function () { window.focus(); window.location.href = 'pencatatan.php'; notif.close(); };
 }
-
-// ── Minta izin & aktifkan ────────────────────
 async function aktifkanNotifikasi() {
-    // Browser tidak support
-    if (!('Notification' in window)) {
-        showToast('error', 'Browser kamu tidak mendukung notifikasi.');
-        notifToggle.checked = false;
-        return;
-    }
-
+    if (!('Notification' in window)) { showToast('error', 'Browser tidak mendukung notifikasi.'); notifToggle.checked = false; return; }
     let permission = Notification.permission;
-
-    // Kalau belum pernah diminta, minta sekarang
-    if (permission === 'default') {
-        permission = await Notification.requestPermission();
-    }
-
+    if (permission === 'default') permission = await Notification.requestPermission();
     if (permission === 'granted') {
         localStorage.setItem('notif_aktif', 'true');
         updateStatusLabel(true);
         jadwalkanNotifikasi();
         showToast('success', `Notifikasi aktif! Kamu akan diingatkan setiap jam ${JAM_NOTIFIKASI.toString().padStart(2,'0')}.${MENIT_NOTIFIKASI.toString().padStart(2,'0')}.`);
-
-        // Kirim notifikasi percobaan setelah 3 detik agar user tahu berhasil
-        setTimeout(() => {
-            new Notification('✅ DompetKos — Notifikasi Aktif', {
-                body: `Pengingat harian berhasil diaktifkan. Kamu akan diingatkan setiap jam ${JAM_NOTIFIKASI.toString().padStart(2,'0')}.${MENIT_NOTIFIKASI.toString().padStart(2,'0')}.`,
-                icon: 'favicon.ico',
-                tag: 'dompetkos-test',
-            });
-        }, 3000);
-
+        setTimeout(() => { new Notification('✅ DompetKos — Notifikasi Aktif', { body: 'Pengingat harian berhasil diaktifkan.', icon: 'favicon.ico', tag: 'dompetkos-test' }); }, 3000);
     } else if (permission === 'denied') {
-        // User memblokir notifikasi di browser
         notifToggle.checked = false;
         localStorage.setItem('notif_aktif', 'false');
         updateStatusLabel(false);
-        showToast('warning', 'Izin notifikasi diblokir. Buka pengaturan browser → izinkan notifikasi untuk situs ini.');
+        showToast('warning', 'Izin notifikasi diblokir. Buka pengaturan browser untuk mengizinkan.');
     } else {
-        // User menutup dialog tanpa memilih
         notifToggle.checked = false;
         localStorage.setItem('notif_aktif', 'false');
         updateStatusLabel(false);
-        showToast('info', 'Izin notifikasi belum diberikan. Toggle ini untuk mencoba lagi.');
+        showToast('info', 'Izin notifikasi belum diberikan.');
     }
 }
-
-// ── Matikan notifikasi ───────────────────────
 function nonaktifkanNotifikasi() {
     clearTimeout(notifTimer);
     localStorage.setItem('notif_aktif', 'false');
     updateStatusLabel(false);
     showToast('info', 'Notifikasi harian dinonaktifkan.');
 }
-
-// ── Toggle handler ───────────────────────────
 notifToggle.addEventListener('change', function () {
-    if (this.checked) {
-        aktifkanNotifikasi();
-    } else {
-        nonaktifkanNotifikasi();
-    }
+    if (this.checked) aktifkanNotifikasi(); else nonaktifkanNotifikasi();
 });
-
-// ── Init: baca state tersimpan saat halaman load ──
 (function initNotifikasi() {
     const savedAktif = localStorage.getItem('notif_aktif') === 'true';
-
-    if (!('Notification' in window)) {
-        // Browser tidak support notifikasi
-        notifToggle.disabled = true;
-        notifStatusTxt.textContent = 'Browser tidak mendukung notifikasi';
-        return;
-    }
-
-    // Kalau izin browser sudah diblokir, paksa OFF
-    if (Notification.permission === 'denied') {
-        notifToggle.checked = false;
-        localStorage.setItem('notif_aktif', 'false');
-        updateStatusLabel(false);
-        notifStatusTxt.textContent = 'Diblokir browser · buka pengaturan browser untuk mengizinkan';
-        return;
-    }
-
-    if (savedAktif && Notification.permission === 'granted') {
-        notifToggle.checked = true;
-        updateStatusLabel(true);
-        jadwalkanNotifikasi(); // Jadwalkan ulang saat halaman dibuka
-    } else {
-        notifToggle.checked = false;
-        updateStatusLabel(false);
-    }
+    if (!('Notification' in window)) { notifToggle.disabled = true; notifStatusTxt.textContent = 'Browser tidak mendukung notifikasi'; return; }
+    if (Notification.permission === 'denied') { notifToggle.checked = false; localStorage.setItem('notif_aktif', 'false'); updateStatusLabel(false); notifStatusTxt.textContent = 'Diblokir browser'; return; }
+    if (savedAktif && Notification.permission === 'granted') { notifToggle.checked = true; updateStatusLabel(true); jadwalkanNotifikasi(); }
+    else { notifToggle.checked = false; updateStatusLabel(false); }
 })();
 </script>
 </body>

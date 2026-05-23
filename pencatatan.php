@@ -1,18 +1,19 @@
 <?php
 require 'koneksi.php';
 
-if (!isset($_SESSION['user_id'])) { 
-    header("Location: login.php"); 
-    exit; 
+// Cek login via COOKIE
+if (!isset($_COOKIE['user_id'])) {
+    header("Location: login.php");
+    exit;
 }
-$user_id = $_SESSION['user_id'];
+$user_id = $_COOKIE['user_id'];
 
-$edit_mode = false; 
-$edit_id = ''; 
-$default_type = 'pengeluaran'; 
+$edit_mode = false;
+$edit_id = '';
+$default_type = 'pengeluaran';
 $default_amount = '';
-$default_category = 'Lainnya'; 
-$default_description = ''; 
+$default_category = 'Lainnya';
+$default_description = '';
 $default_date = date('Y-m-d');
 
 if (isset($_GET['id'])) {
@@ -22,29 +23,30 @@ if (isset($_GET['id'])) {
         $data_edit = $query_edit->fetch_assoc();
         $edit_mode = true;
         $default_type = $data_edit['type'];
-        $default_amount = number_format((int)$data_edit['amount'], 0, ',', '.');        $default_category = $data_edit['category'];
-        $default_description = $data_edit['description']; 
+        $default_amount = number_format((int)$data_edit['amount'], 0, ',', '.');
+        $default_category = $data_edit['category'];
+        $default_description = $data_edit['description'];
         $default_date = $data_edit['date'];
     }
 }
 
 if (isset($_POST['simpan_transaksi'])) {
-    $jenis = $_POST['jenis_transaksi'];
-    $nominal = preg_replace("/[^0-9]/", "", $_POST['nominal']); 
-    $kategori = $_POST['kategori'];
-    $keterangan = $conn->real_escape_string($_POST['keterangan']); 
+    $jenis     = $_POST['jenis_transaksi'];
+    $nominal   = preg_replace("/[^0-9]/", "", $_POST['nominal']);
+    $kategori  = $_POST['kategori'];
+    $keterangan = $conn->real_escape_string($_POST['keterangan']);
     $id_update = $_POST['edit_id'];
 
     if (!empty($id_update)) {
         $query = "UPDATE transactions SET type='$jenis', amount='$nominal', category='$kategori', description='$keterangan' WHERE id='$id_update' AND user_id='$user_id'";
-        if ($conn->query($query)) { 
-            echo "<script>alert('Catatan berhasil diperbarui!'); window.location='riwayat.php?date=$default_date';</script>"; 
+        if ($conn->query($query)) {
+            echo "<script>alert('Catatan berhasil diperbarui!'); window.location='riwayat.php?date=$default_date';</script>";
         }
     } else {
         $tanggal_sekarang = date('Y-m-d');
         $query = "INSERT INTO transactions (user_id, type, amount, category, description, date) VALUES ('$user_id', '$jenis', '$nominal', '$kategori', '$keterangan', '$tanggal_sekarang')";
-        if ($conn->query($query)) { 
-            echo "<script>alert('Catatan baru berhasil disimpan!'); window.location='riwayat.php';</script>"; 
+        if ($conn->query($query)) {
+            echo "<script>alert('Catatan baru berhasil disimpan!'); window.location='riwayat.php';</script>";
         }
     }
 }
@@ -61,7 +63,7 @@ if (isset($_POST['simpan_transaksi'])) {
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
-        .btn-kategori.active { 
+        .btn-kategori.active {
             transform: scale(1.05);
             box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3);
         }
@@ -78,7 +80,6 @@ if (isset($_POST['simpan_transaksi'])) {
             </div>
             <h2 class="text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white">DompetKos</h2>
         </div>
-
         <nav class="flex-1 px-5 mt-6 space-y-2">
             <p class="px-4 text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-4">Menu Utama</p>
             <a href="dashboard.php" class="flex items-center gap-4 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:text-[#2a40a3] dark:hover:text-white px-5 py-4 rounded-2xl font-semibold transition group">
@@ -137,39 +138,37 @@ if (isset($_POST['simpan_transaksi'])) {
                 <input type="hidden" name="kategori" id="kategori_input" value="<?= htmlspecialchars($default_category) ?>">
                 <div class="flex flex-col">
                     <span class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Pilih Kategori</span>
-                    <div class="grid grid-cols-4 gap-3" id="grid-kategori">
-                        <!-- Diisi oleh JavaScript -->
-                    </div>
+                    <div class="grid grid-cols-4 gap-3" id="grid-kategori"></div>
                 </div>
 
                 <!-- KALKULATOR -->
                 <div class="grid grid-cols-4 gap-2.5 bg-gray-50 dark:bg-gray-900/40 p-3 rounded-[2rem] border border-gray-100 dark:border-gray-800">
                     <button type="button" onclick="clearDisplay()" class="p-3.5 bg-white dark:bg-gray-800 rounded-xl font-bold text-lg text-amber-500 border border-gray-100 dark:border-gray-700 shadow-sm active:scale-95 transition">AC</button>
                     <button type="button" onclick="hapusSatu()" class="p-3.5 bg-white dark:bg-gray-800 rounded-xl font-bold text-lg text-gray-500 border border-gray-100 dark:border-gray-700 shadow-sm active:scale-95 transition"><i class="fas fa-backspace"></i></button>
-                    <button type="button" onclick="appendOperator('%')" class="p-3.5 bg-white dark:bg-gray-800 rounded-xl font-bold text-lg text-blue-500 border border-gray-100 dark:border-gray-700 shadow-sm active:scale-95 transition">%</button>
-                    <button type="button" onclick="appendOperator('/')" class="p-3.5 bg-blue-50 dark:bg-blue-950/40 rounded-xl font-bold text-lg text-blue-600 dark:text-blue-400 border border-blue-100/50 dark:border-blue-900 shadow-sm active:scale-95 transition">÷</button>
-                    
+                    <button type="button" class="p-3.5 bg-white dark:bg-gray-800 rounded-xl font-bold text-lg text-blue-500 border border-gray-100 dark:border-gray-700 shadow-sm active:scale-95 transition">%</button>
+                    <button type="button" class="p-3.5 bg-blue-50 dark:bg-blue-950/40 rounded-xl font-bold text-lg text-blue-600 dark:text-blue-400 border border-blue-100/50 dark:border-blue-900 shadow-sm active:scale-95 transition">÷</button>
+
                     <button type="button" onclick="appendNumber('7')" class="p-3.5 bg-white dark:bg-gray-800 rounded-xl font-bold text-lg text-gray-800 dark:text-gray-200 border border-gray-100 dark:border-gray-700 shadow-sm active:scale-95 transition">7</button>
                     <button type="button" onclick="appendNumber('8')" class="p-3.5 bg-white dark:bg-gray-800 rounded-xl font-bold text-lg text-gray-800 dark:text-gray-200 border border-gray-100 dark:border-gray-700 shadow-sm active:scale-95 transition">8</button>
                     <button type="button" onclick="appendNumber('9')" class="p-3.5 bg-white dark:bg-gray-800 rounded-xl font-bold text-lg text-gray-800 dark:text-gray-200 border border-gray-100 dark:border-gray-700 shadow-sm active:scale-95 transition">9</button>
-                    <button type="button" onclick="appendOperator('*')" class="p-3.5 bg-blue-50 dark:bg-blue-950/40 rounded-xl font-bold text-lg text-blue-600 dark:text-blue-400 border border-blue-100/50 dark:border-blue-900 shadow-sm active:scale-95 transition">×</button>
-                    
+                    <button type="button" class="p-3.5 bg-blue-50 dark:bg-blue-950/40 rounded-xl font-bold text-lg text-blue-600 dark:text-blue-400 border border-blue-100/50 dark:border-blue-900 shadow-sm active:scale-95 transition">×</button>
+
                     <button type="button" onclick="appendNumber('4')" class="p-3.5 bg-white dark:bg-gray-800 rounded-xl font-bold text-lg text-gray-800 dark:text-gray-200 border border-gray-100 dark:border-gray-700 shadow-sm active:scale-95 transition">4</button>
                     <button type="button" onclick="appendNumber('5')" class="p-3.5 bg-white dark:bg-gray-800 rounded-xl font-bold text-lg text-gray-800 dark:text-gray-200 border border-gray-100 dark:border-gray-700 shadow-sm active:scale-95 transition">5</button>
                     <button type="button" onclick="appendNumber('6')" class="p-3.5 bg-white dark:bg-gray-800 rounded-xl font-bold text-lg text-gray-800 dark:text-gray-200 border border-gray-100 dark:border-gray-700 shadow-sm active:scale-95 transition">6</button>
-                    <button type="button" onclick="appendOperator('-')" class="p-3.5 bg-blue-50 dark:bg-blue-950/40 rounded-xl font-bold text-lg text-blue-600 dark:text-blue-400 border border-blue-100/50 dark:border-blue-900 shadow-sm active:scale-95 transition">-</button>
-                    
+                    <button type="button" class="p-3.5 bg-blue-50 dark:bg-blue-950/40 rounded-xl font-bold text-lg text-blue-600 dark:text-blue-400 border border-blue-100/50 dark:border-blue-900 shadow-sm active:scale-95 transition">-</button>
+
                     <button type="button" onclick="appendNumber('1')" class="p-3.5 bg-white dark:bg-gray-800 rounded-xl font-bold text-lg text-gray-800 dark:text-gray-200 border border-gray-100 dark:border-gray-700 shadow-sm active:scale-95 transition">1</button>
                     <button type="button" onclick="appendNumber('2')" class="p-3.5 bg-white dark:bg-gray-800 rounded-xl font-bold text-lg text-gray-800 dark:text-gray-200 border border-gray-100 dark:border-gray-700 shadow-sm active:scale-95 transition">2</button>
                     <button type="button" onclick="appendNumber('3')" class="p-3.5 bg-white dark:bg-gray-800 rounded-xl font-bold text-lg text-gray-800 dark:text-gray-200 border border-gray-100 dark:border-gray-700 shadow-sm active:scale-95 transition">3</button>
-                    <button type="button" onclick="appendOperator('+')" class="p-3.5 bg-blue-50 dark:bg-blue-950/40 rounded-xl font-bold text-lg text-blue-600 dark:text-blue-400 border border-blue-100/50 dark:border-blue-900 shadow-sm active:scale-95 transition">+</button>
-                    
+                    <button type="button" class="p-3.5 bg-blue-50 dark:bg-blue-950/40 rounded-xl font-bold text-lg text-blue-600 dark:text-blue-400 border border-blue-100/50 dark:border-blue-900 shadow-sm active:scale-95 transition">+</button>
+
                     <button type="button" onclick="appendNumber('00')" class="p-3.5 bg-white dark:bg-gray-800 rounded-xl font-bold text-lg text-gray-800 dark:text-gray-200 border border-gray-100 dark:border-gray-700 shadow-sm active:scale-95 transition col-span-2">00</button>
                     <button type="button" onclick="appendNumber('0')" class="p-3.5 bg-white dark:bg-gray-800 rounded-xl font-bold text-lg text-gray-800 dark:text-gray-200 border border-gray-100 dark:border-gray-700 shadow-sm active:scale-95 transition">0</button>
-                    <button type="button" onclick="calculate()" class="p-3.5 bg-[#2a40a3] text-white rounded-xl font-bold text-lg shadow-md shadow-blue-900/20 hover:bg-blue-800 active:scale-95 transition">=</button>
+                    <button type="button" class="p-3.5 bg-[#2a40a3] text-white rounded-xl font-bold text-lg shadow-md shadow-blue-900/20 hover:bg-blue-800 active:scale-95 transition">=</button>
 
                     <button type="submit" name="simpan_transaksi" class="col-span-4 mt-3 bg-gradient-to-r from-[#2a40a3] to-[#4f8cf6] text-white py-4 rounded-xl font-bold text-base hover:opacity-95 shadow-lg shadow-blue-500/20 active:scale-[0.99] transition flex items-center justify-center gap-2">
-                        <i class="fas <?= $edit_mode ? 'fa-save' : 'fa-check' ?>"></i> 
+                        <i class="fas <?= $edit_mode ? 'fa-save' : 'fa-check' ?>"></i>
                         <?= $edit_mode ? 'Simpan Perubahan' : 'Simpan Catatan' ?>
                     </button>
                 </div>
@@ -199,61 +198,29 @@ if (isset($_POST['simpan_transaksi'])) {
     </div>
 
 <script>
-    if (localStorage.getItem('theme') === 'dark') { 
-        document.documentElement.classList.add('dark'); 
+    if (localStorage.getItem('theme') === 'dark') {
+        document.documentElement.classList.add('dark');
     }
-    
-    let display = document.getElementById('display');
-    let kategoriInput = document.getElementById('kategori_input');
 
-    // =============================================
-    // FORMAT RIBUAN
-    // =============================================
-    let rawValue = '<?= preg_replace("/[^0-9]/", "", $default_amount) ?>';
+    let display       = document.getElementById('display');
+    let kategoriInput = document.getElementById('kategori_input');
+    let rawValue      = '<?= preg_replace("/[^0-9]/", "", $default_amount) ?>';
 
     function formatRibuan(str) {
         if (!str) return '';
         return str.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
     }
-
-    function updateDisplay() {
-        display.value = formatRibuan(rawValue) || '';
-    }
-
-    // =============================================
-    // KALKULATOR
-    // =============================================
+    function updateDisplay() { display.value = formatRibuan(rawValue) || ''; }
     function appendNumber(num) {
-        // Cegah angka 0 di depan
         if (rawValue === '0') rawValue = '';
         rawValue += num;
         updateDisplay();
     }
+    function clearDisplay() { rawValue = ''; display.value = ''; }
+    function hapusSatu() { rawValue = rawValue.slice(0, -1); updateDisplay(); }
 
-    function clearDisplay() {
-        rawValue = '';
-        display.value = '';
-    }
-
-    function hapusSatu() {
-        rawValue = rawValue.slice(0, -1);
-        updateDisplay();
-    }
-
-    function appendOperator(op) {
-        // Kosongkan dan mulai ulang (operator tidak kompatibel dengan format ribuan)
-    }
-
-    function calculate() {
-        // Tidak digunakan
-    }
-
-    // Inisialisasi tampilan saat halaman load
     updateDisplay();
 
-    // =============================================
-    // DATA KATEGORI PER JENIS TRANSAKSI
-    // =============================================
     const kategoriData = {
         pengeluaran: [
             { name: 'Makanan',      icon: 'fa-hamburger',     color: '#3b82f6' },
@@ -266,36 +233,25 @@ if (isset($_POST['simpan_transaksi'])) {
             { name: 'Lainnya',      icon: 'fa-wallet',        color: '#93c5fd' },
         ],
         pemasukan: [
-            { name: 'Gaji',       icon: 'fa-money-bill-wave', color: '#10b981' },
-            { name: 'Freelance',  icon: 'fa-laptop-code',     color: '#059669' },
-            { name: 'Beasiswa',   icon: 'fa-graduation-cap',  color: '#0d9488' },
-            { name: 'Bisnis',     icon: 'fa-store',           color: '#0891b2' },
-            { name: 'Investasi',  icon: 'fa-chart-line',      color: '#0284c7' },
-            { name: 'Hadiah',     icon: 'fa-gift',            color: '#7c3aed' },
-            { name: 'Transfer',   icon: 'fa-exchange-alt',    color: '#4f46e5' },
-            { name: 'Lainnya',    icon: 'fa-wallet',          color: '#6b7280' },
+            { name: 'Gaji',      icon: 'fa-money-bill-wave', color: '#10b981' },
+            { name: 'Freelance', icon: 'fa-laptop-code',     color: '#059669' },
+            { name: 'Beasiswa',  icon: 'fa-graduation-cap',  color: '#0d9488' },
+            { name: 'Bisnis',    icon: 'fa-store',           color: '#0891b2' },
+            { name: 'Investasi', icon: 'fa-chart-line',      color: '#0284c7' },
+            { name: 'Hadiah',    icon: 'fa-gift',            color: '#7c3aed' },
+            { name: 'Transfer',  icon: 'fa-exchange-alt',    color: '#4f46e5' },
+            { name: 'Lainnya',   icon: 'fa-wallet',          color: '#6b7280' },
         ]
     };
 
-    // =============================================
-    // RENDER KATEGORI
-    // =============================================
     function renderKategori(jenis, activeKat = null) {
         const grid = document.getElementById('grid-kategori');
         const list = kategoriData[jenis];
-
-        if (!activeKat) {
-            activeKat = list[list.length - 1].name;
-        }
-
+        if (!activeKat) activeKat = list[list.length - 1].name;
         grid.innerHTML = '';
-
         list.forEach(kat => {
             const isActive = (kat.name === activeKat);
-            const bgStyle = isActive
-                ? `background-color: ${kat.color}; color: white;`
-                : `background-color: transparent; color: #64748b;`;
-
+            const bgStyle  = isActive ? `background-color: ${kat.color}; color: white;` : `background-color: transparent; color: #64748b;`;
             const btn = document.createElement('button');
             btn.type = 'button';
             btn.className = 'btn-kategori flex flex-col items-center justify-center p-3 rounded-2xl border border-gray-100 dark:border-gray-700/60 transition-all duration-200 hover:bg-gray-50 dark:hover:bg-gray-900/40' + (isActive ? ' active' : '');
@@ -303,33 +259,21 @@ if (isset($_POST['simpan_transaksi'])) {
             btn.setAttribute('style', bgStyle);
             btn.innerHTML = `<i class="fas ${kat.icon} text-lg mb-1.5"></i><span class="text-[10px] font-bold tracking-tight text-center truncate w-full">${kat.name}</span>`;
             btn.onclick = function() { setKategori(kat.name, this); };
-
             if (isActive) kategoriInput.value = kat.name;
             grid.appendChild(btn);
         });
     }
 
-    // =============================================
-    // SWITCH TAB
-    // =============================================
     document.querySelectorAll('input[name="jenis_transaksi"]').forEach(radio => {
-        radio.addEventListener('change', function() {
-            renderKategori(this.value, null);
-        });
+        radio.addEventListener('change', function() { renderKategori(this.value, null); });
     });
 
-    // =============================================
-    // INIT
-    // =============================================
     const initJenis = '<?= $default_type ?>';
     const initKat   = '<?= $default_category ?>';
     renderKategori(initJenis, initKat);
 
-    // =============================================
-    // SET KATEGORI
-    // =============================================
-    function setKategori(kat, btnElement) { 
-        kategoriInput.value = kat; 
+    function setKategori(kat, btnElement) {
+        kategoriInput.value = kat;
         document.querySelectorAll('.btn-kategori').forEach(btn => {
             btn.classList.remove('active');
             btn.style.backgroundColor = 'transparent';

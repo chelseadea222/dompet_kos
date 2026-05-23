@@ -1,7 +1,7 @@
 <?php
 require 'koneksi.php';
 
-// 1. Cek menggunakan COOKIE, bukan SESSION
+// Cek menggunakan COOKIE
 if (isset($_COOKIE['user_id'])) {
     header("Location: dashboard.php");
     exit;
@@ -22,9 +22,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $user = $result->fetch_assoc();
         
         if (password_verify($password, $user['password'])) {
-            // 2. Ganti pembuatan Sesi menjadi COOKIE (berlaku 1 hari / 86400 detik)
-            setcookie('user_id', (string)$user['id'], time() + 86400, "/");
-            setcookie('username', (string)$user['username'], time() + 86400, "/");
+            // Set COOKIE berlaku 1 hari (86400 detik)
+            setcookie('user_id',  (string)$user['id'],       time() + 86400, "/");
+            setcookie('username', (string)$user['username'],  time() + 86400, "/");
             
             header("Location: dashboard.php");
             exit;
