@@ -26,7 +26,7 @@
 </head>
 <body class="bg-gray-100 p-0 md:p-6">
 
-<div class="w-full max-w-full md:max-w-md h-screen md:h-[85vh] bg-gradient-to-b from-[#4f8cf6] to-[#b4eedb] position-relative md:rounded-3xl md:shadow-2xl flex flex-col justify-between overflow-hidden">
+<div class="w-full max-w-full md:max-w-md min-h-screen md:min-h-[85vh] bg-gradient-to-b from-[#4f8cf6] to-[#b4eedb] relative md:rounded-3xl md:shadow-2xl flex flex-col justify-between overflow-x-hidden overflow-y-auto">
     
     <div class="absolute top-[-50px] right-[-50px] w-64 h-64 bg-white/20 rounded-full blur-3xl pointer-events-none"></div>
     <div class="absolute bottom-[20%] left-[-50px] w-48 h-48 bg-blue-600/20 rounded-full blur-2xl pointer-events-none"></div>
@@ -44,7 +44,7 @@
         </p>
     </div>
 
-    <div class="p-8 pb-12 w-full relative z-10 flex flex-col gap-4 bg-white/20 backdrop-blur-lg rounded-t-[40px] md:rounded-b-3xl border-t border-white/40 shadow-[0_-15px_30px_rgba(0,0,0,0.1)]">
+    <div class="p-8 pb-12 w-full relative z-10 flex flex-col gap-4 bg-white/20 backdrop-blur-lg rounded-t-[40px] md:rounded-b-3xl border-t border-white/40 shadow-[0_-15px_30px_rgba(0,0,0,0.1)] mt-auto">
         <a href="login.php" class="w-full bg-[#2a40a3] text-white py-4 rounded-2xl font-bold text-center text-lg shadow-[0_8px_20px_rgba(42,64,163,0.4)] hover:bg-blue-800 transition-all transform active:scale-95 flex items-center justify-center gap-2">
             Masuk ke Akun
         </a>
