@@ -1,11 +1,15 @@
 <?php
 require 'koneksi.php';
 
-if (!isset($_SESSION['user_id'])) { header("Location: login.php"); exit; }
-$user_id = $_SESSION['user_id'];
+if (!isset($_COOKIE['user_id'])) {
+    header("Location: login.php");
+    exit;
+}
+$user_id = $_COOKIE['user_id'];
 
 $date   = isset($_GET['date'])   ? $_GET['date']   : date('Y-m-d');
 $bulan  = isset($_GET['bulan'])  ? $_GET['bulan']  : null;
+
 
 if ($bulan) {
     $result     = $conn->query("SELECT * FROM transactions WHERE user_id='$user_id' AND DATE_FORMAT(date,'%Y-%m')='$bulan' ORDER BY date ASC, id ASC");
