@@ -1,10 +1,10 @@
 <?php
-ob_start(); // WAJIB ADA: Mencegah Vercel crash (HTTP2 Error) saat membuat cookie
+ob_start();
 require 'koneksi.php';
 
-// Jika sudah ada cookie, langsung ke dashboard + Jurus Anti-Cache (Waktu Acak)
+// Jika sudah ada cookie, langsung ke dashboard
 if (!empty($_COOKIE['user_id'])) {
-    header("Location: dashboard.php?t=" . time());
+    header("Location: dashboard.php?v=" . time());
     exit;
 }
 
@@ -27,13 +27,18 @@ if (isset($_POST['email']) && isset($_POST['password'])) {
             $uid = (string)$user['id'];
             $uname = (string)$user['username'];
             
-            // 1. BUAT COOKIE MURNI LEWAT PHP 
+            // 1. BUAT COOKIE VIA PHP
             setcookie('user_id', $uid, time() + 86400, "/");
             setcookie('username', $uname, time() + 86400, "/");
             
-            // 2. PINDAH HALAMAN LEWAT PHP (Dijamin stabil, cookie tersimpan sempurna)
-            // Ditambah time() agar link selalu baru dan lolos dari cache Vercel
-            header("Location: dashboard.php?t=" . time());
+            // 2. JURUS PAMUNGKAS ANTI-CACHE VERCEL
+            echo "<script>
+                document.cookie = 'user_id=$uid; path=/; max-age=86400; SameSite=Lax';
+                document.cookie = 'username=$uname; path=/; max-age=86400; SameSite=Lax';
+                
+                // Tambahkan waktu acak agar Vercel mengira ini halaman baru dan tidak memakai cache!
+                window.location.replace('dashboard.php?v=' + new Date().getTime());
+            </script>";
             exit;
         } else {
             $error = "Password salah!";

@@ -1,34 +1,30 @@
 <?php 
 ob_start();
 
-// 3 BARIS INI WAJIB DITAMBAHKAN AGAR VERCEL TIDAK MENYIMPAN REKAMAN HALAMAN INI
+// 3 BARIS INI WAJIB ADA AGAR VERCEL TIDAK MENGUNCI HALAMAN LOGIN
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Cache-Control: post-check=0, pre-check=0", false);
 header("Pragma: no-cache");
 
 require 'koneksi.php'; 
 
-// 1. Ambil ID dari Cookie (Sesuai dengan sistem login kamu)
+// 1. Ambil ID dari Cookie
 $user_id = null;
 if (!empty($_COOKIE['user_id'])) {
     $user_id = (int)$_COOKIE['user_id'];
 }
-// ... (SISA KODE KE BAWAHNYA BIARKAN SAMA PERSIS SEPERTI SEBELUMNYA) ...
 
 // 2. Jika Cookie KOSONG atau RUSAK (Tukang Bersih-bersih)
 if (empty($user_id)) {
-    // Hancurkan "Cookie Hantu" agar login.php tidak melempar balik ke dashboard
     setcookie('user_id', '', time() - 3600, "/");
     setcookie('username', '', time() - 3600, "/");
-    
-    // Pastikan memori browser untuk halaman ini juga dibersihkan
     unset($_COOKIE['user_id']);
     unset($_COOKIE['username']);
     
-    // Kembalikan ke halaman login dengan aman
-    echo "<script>window.location.href = 'login.php';</script>";
+    echo "<script>window.location.replace('login.php');</script>";
     exit;
 }
+// ... (SISA KODE KE BAWAHNYA BIARKAN SAMA SEPERTI SEBELUMNYA) ...
 
 $nama_user = !empty($_COOKIE['username']) ? $_COOKIE['username'] : 'Pengguna';
 
