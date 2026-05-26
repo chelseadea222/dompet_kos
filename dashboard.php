@@ -1,4 +1,5 @@
 <?php 
+ob_start();
 require 'koneksi.php'; 
 
 // 1. Ambil ID dari Cookie (Sesuai dengan sistem login kamu)
