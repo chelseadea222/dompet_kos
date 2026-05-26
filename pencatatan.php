@@ -1,14 +1,12 @@
 <?php
 require 'koneksi.php';
 
-// 1. Gunakan empty() untuk mengecek apakah cookie benar-benar ada isinya
-if (empty($_COOKIE['user_id'])) {
+// Cek login via COOKIE
+if (!isset($_COOKIE['user_id'])) {
     header("Location: login.php");
     exit;
 }
-
-// 2. Paksa tipe data menjadi Integer (int) agar selalu berupa angka valid untuk database
-$user_id = (int)$_COOKIE['user_id'];
+$user_id = $_COOKIE['user_id'];
 
 $edit_mode = false;
 $edit_id = '';
