@@ -1,8 +1,14 @@
 <?php 
 require 'koneksi.php'; 
 
-// Proteksi halaman: Cek login via COOKIE (Mencegah user_id kosong & aman untuk Vercel)
-if (isset($_COOKIE['user_id'])) {
+// Proteksi halaman: Cek login via COOKIE
+if (empty($_COOKIE['user_id'])) {
+    
+    // TAMBAHKAN INI: Hapus paksa "cookie hantu" sebelum dilempar balik ke login
+    setcookie('user_id', '', time() - 3600, "/");
+    setcookie('username', '', time() - 3600, "/");
+    
+    // Baru lempar ke halaman login
     echo "<script>window.location.href = 'login.php';</script>";
     exit;
 }
@@ -10,6 +16,7 @@ if (isset($_COOKIE['user_id'])) {
 $user_id = (int)$_COOKIE['user_id'];
 $nama_user = isset($_COOKIE['username']) ? $_COOKIE['username'] : 'Pengguna';
 
+// ... (SISA KODE KE BAWAHNYA TETAP SAMA SEPERTI SEBELUMNYA) ...
 $hari_ini = date('Y-m-d');
 $bulan_sekarang = date('m');
 $tahun_sekarang = date('Y');
