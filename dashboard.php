@@ -1,5 +1,11 @@
 <?php 
 ob_start();
+
+// 3 BARIS INI WAJIB DITAMBAHKAN AGAR VERCEL TIDAK MENYIMPAN REKAMAN HALAMAN INI
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Cache-Control: post-check=0, pre-check=0", false);
+header("Pragma: no-cache");
+
 require 'koneksi.php'; 
 
 // 1. Ambil ID dari Cookie (Sesuai dengan sistem login kamu)
@@ -7,6 +13,7 @@ $user_id = null;
 if (!empty($_COOKIE['user_id'])) {
     $user_id = (int)$_COOKIE['user_id'];
 }
+// ... (SISA KODE KE BAWAHNYA BIARKAN SAMA PERSIS SEPERTI SEBELUMNYA) ...
 
 // 2. Jika Cookie KOSONG atau RUSAK (Tukang Bersih-bersih)
 if (empty($user_id)) {
