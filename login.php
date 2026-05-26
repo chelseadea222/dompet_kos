@@ -31,10 +31,14 @@ if (isset($_POST['email']) && isset($_POST['password'])) {
             setcookie('username', $uname, time() + 86400, "/");
             
             // 2. BUAT COOKIE LEWAT JAVASCRIPT & PINDAH HALAMAN (Anti-Crash Vercel)
+            // 2. BUAT COOKIE LEWAT JAVASCRIPT & PINDAH HALAMAN (Anti-Crash Vercel)
             echo "<script>
-                document.cookie = 'user_id=$uid; path=/; max-age=86400';
-                document.cookie = 'username=$uname; path=/; max-age=86400';
-                window.location.href = 'dashboard.php';
+                // Perkuat aturan cookie agar tidak diblokir oleh keamanan browser (SameSite=Lax)
+                document.cookie = 'user_id=$uid; path=/; max-age=86400; SameSite=Lax';
+                document.cookie = 'username=$uname; path=/; max-age=86400; SameSite=Lax';
+                
+                // JURUS ANTI-CACHE: Tambahkan kode waktu acak agar browser dipaksa memuat dashboard versi terbaru
+                window.location.href = 'dashboard.php?t=' + new Date().getTime();
             </script>";
             exit;
         } else {
