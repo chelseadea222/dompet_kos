@@ -1,7 +1,7 @@
 <?php
 $host = "gateway01.ap-southeast-1.prod.alicloud.tidbcloud.com"; 
 $user = "48D8BJbofbESMRv.root";
-$pass = "0aaL5V7vTVUnnPtZ";
+$pass = "mmL6yn2glnKqUVZA";
 $db   = "dompetkos"; 
 $port = 4000;
 
