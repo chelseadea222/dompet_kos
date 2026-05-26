@@ -1,14 +1,15 @@
 <?php
 require 'koneksi.php';
 
-if (isset($_COOKIE['user_id'])) {
+// Jika sudah ada cookie, langsung ke dashboard
+if (!empty($_COOKIE['user_id'])) {
     echo "<script>window.location.href = 'dashboard.php';</script>";
     exit;
 }
 
 $error = "";
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if (isset($_POST['email']) && isset($_POST['password'])) {
     $email = $_POST['email'];
     $password = $_POST['password'];
 
@@ -20,11 +21,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($result->num_rows > 0) {
         $user = $result->fetch_assoc();
         
-        if (password_verify($password, $user['password'])) {
-            $uid = $user['id'];
-            $uname = $user['username'];
+        // Cek password (Bisa untuk password yang di-hash maupun teks biasa)
+        if (password_verify($password, $user['password']) || $password === $user['password']) {
+            $uid = (string)$user['id'];
+            $uname = (string)$user['username'];
             
-            // SOLUSI FINAL: Buat Cookie dan Redirect murni menggunakan JavaScript
+            // 1. BUAT COOKIE LEWAT PHP (Waktu kedaluwarsa 1 hari)
+            setcookie('user_id', $uid, time() + 86400, "/");
+            setcookie('username', $uname, time() + 86400, "/");
+            
+            // 2. BUAT COOKIE LEWAT JAVASCRIPT & PINDAH HALAMAN (Anti-Crash Vercel)
             echo "<script>
                 document.cookie = 'user_id=$uid; path=/; max-age=86400';
                 document.cookie = 'username=$uname; path=/; max-age=86400';
