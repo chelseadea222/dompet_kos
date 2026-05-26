@@ -1,22 +1,29 @@
 <?php 
 require 'koneksi.php'; 
 
-// Proteksi halaman: Cek login via COOKIE
-if (empty($_COOKIE['user_id'])) {
-    
-    // TAMBAHKAN INI: Hapus paksa "cookie hantu" sebelum dilempar balik ke login
+// 1. Ambil ID dari Cookie (Sesuai dengan sistem login kamu)
+$user_id = null;
+if (!empty($_COOKIE['user_id'])) {
+    $user_id = (int)$_COOKIE['user_id'];
+}
+
+// 2. Jika Cookie KOSONG atau RUSAK (Tukang Bersih-bersih)
+if (empty($user_id)) {
+    // Hancurkan "Cookie Hantu" agar login.php tidak melempar balik ke dashboard
     setcookie('user_id', '', time() - 3600, "/");
     setcookie('username', '', time() - 3600, "/");
     
-    // Baru lempar ke halaman login
+    // Pastikan memori browser untuk halaman ini juga dibersihkan
+    unset($_COOKIE['user_id']);
+    unset($_COOKIE['username']);
+    
+    // Kembalikan ke halaman login dengan aman
     echo "<script>window.location.href = 'login.php';</script>";
     exit;
 }
 
-$user_id = (int)$_COOKIE['user_id'];
-$nama_user = isset($_COOKIE['username']) ? $_COOKIE['username'] : 'Pengguna';
+$nama_user = !empty($_COOKIE['username']) ? $_COOKIE['username'] : 'Pengguna';
 
-// ... (SISA KODE KE BAWAHNYA TETAP SAMA SEPERTI SEBELUMNYA) ...
 $hari_ini = date('Y-m-d');
 $bulan_sekarang = date('m');
 $tahun_sekarang = date('Y');
@@ -27,11 +34,11 @@ $user_data = $query_user->fetch_assoc();
 $foto_profil = (!empty($user_data['profile_pic']) && file_exists('uploads/' . $user_data['profile_pic'])) 
                ? 'uploads/' . $user_data['profile_pic'] : null;
 
-// 1. NOTIFIKASI HARIAN
+// NOTIFIKASI HARIAN
 $cek_hari_ini = $conn->query("SELECT id FROM transactions WHERE user_id = '$user_id' AND date = '$hari_ini'");
 $belum_catat_hari_ini = ($cek_hari_ini && $cek_hari_ini->num_rows == 0);
 
-// 2. REKAP KEUANGAN BULAN INI
+// REKAP KEUANGAN BULAN INI
 $q_masuk = $conn->query("SELECT SUM(amount) AS t FROM transactions WHERE user_id='$user_id' AND type='pemasukan' AND MONTH(date)='$bulan_sekarang' AND YEAR(date)='$tahun_sekarang'");
 $uang_masuk = $q_masuk->fetch_assoc()['t'] ?? 0;
 
@@ -40,12 +47,12 @@ $uang_keluar = $q_keluar->fetch_assoc()['t'] ?? 0;
 
 $total_saldo = $uang_masuk - $uang_keluar;
 
-// 3. PERINGATAN BOROS
+// PERINGATAN BOROS
 $q_minggu = $conn->query("SELECT SUM(amount) AS t FROM transactions WHERE user_id='$user_id' AND type='pengeluaran' AND YEARWEEK(date,1)=YEARWEEK(CURDATE(),1)");
 $total_minggu = $q_minggu->fetch_assoc()['t'] ?? 0;
 $apakah_boros = ($total_minggu > 200000);
 
-// 4. DATA GRAFIK PENGELUARAN (Pemasukan dihapus)
+// DATA GRAFIK PENGELUARAN
 $q_grafik_keluar = $conn->query("SELECT category, SUM(amount) as total FROM transactions WHERE user_id='$user_id' AND type='pengeluaran' AND MONTH(date)='$bulan_sekarang' AND YEAR(date)='$tahun_sekarang' GROUP BY category ORDER BY total DESC");
 $data_keluar_grafik = [];
 $total_keluar_grafik = 0;
@@ -62,34 +69,22 @@ $warna_pengeluaran = [
     'Hiburan' => '#60a5fa', 'Lainnya' => '#93c5fd'
 ];
 
-// Fungsi buat conic gradient + label
 function buildPieData($data_grafik, $total, $warna_map) {
     if ($total <= 0) return ['gradient' => '#e5e7eb 0% 100%', 'labels' => [], 'legend' => []];
     
-    $parts = [];
-    $labels = [];
-    $legend = [];
-    $cur = 0;
+    $parts = []; $labels = []; $legend = []; $cur = 0;
     foreach ($data_grafik as $kat => $total_kat) {
         $pct = ($total_kat / $total) * 100;
-        $start = $cur;
-        $end = $cur + $pct;
+        $start = $cur; $end = $cur + $pct;
         $warna = $warna_map[$kat] ?? '#94a3b8';
         $parts[] = "$warna $start% $end%";
-
         $mid = $start + ($pct / 2);
         $angle_rad = deg2rad($mid * 3.6 - 90);
-        $r = 33; // Jarak radius label
+        $r = 33; 
         $left = 50 + ($r * cos($angle_rad));
         $top  = 50 + ($r * sin($angle_rad));
-
         if ($pct >= 4) {
-            $labels[] = [
-                'top' => round($top, 2),
-                'left' => round($left, 2),
-                'text' => round($pct) . '%',
-                'light' => in_array($warna, ['#e0f2fe', '#93c5fd', '#38bdf8', '#60a5fa'])
-            ];
+            $labels[] = ['top' => round($top, 2), 'left' => round($left, 2), 'text' => round($pct) . '%', 'light' => in_array($warna, ['#e0f2fe', '#93c5fd', '#38bdf8', '#60a5fa'])];
         }
         $legend[] = ['name' => $kat, 'color' => $warna, 'amount' => $total_kat, 'pct' => round($pct)];
         $cur = $end;
@@ -98,7 +93,6 @@ function buildPieData($data_grafik, $total, $warna_map) {
 }
 
 $pie_keluar = buildPieData($data_keluar_grafik, $total_keluar_grafik, $warna_pengeluaran);
-
 $nama_bulan_indo = ["","Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
 $bulan_teks = $nama_bulan_indo[(int)$bulan_sekarang];
 ?>
