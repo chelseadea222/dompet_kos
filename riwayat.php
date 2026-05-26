@@ -1,12 +1,14 @@
 <?php
 require 'koneksi.php';
 
-// Cek login via COOKIE
-if (!isset($_COOKIE['user_id'])) {
+// 1. Gunakan empty() untuk mengecek apakah cookie benar-benar ada isinya
+if (empty($_COOKIE['user_id'])) {
     header("Location: login.php");
     exit;
 }
-$user_id = $_COOKIE['user_id'];
+
+// 2. Paksa tipe data menjadi Integer (int) agar selalu berupa angka valid untuk database
+$user_id = (int)$_COOKIE['user_id'];
 
 if (isset($_GET['hapus'])) {
     $id_hapus = $conn->real_escape_string($_GET['hapus']);

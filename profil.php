@@ -10,11 +10,13 @@ if (isset($_GET['logout'])) {
 }
 
 // Cek login via COOKIE
-if (!isset($_COOKIE['user_id'])) {
+if (empty($_COOKIE['user_id'])) {
     header("Location: login.php");
     exit;
 }
-$user_id = $_COOKIE['user_id'];
+
+// 2. Paksa tipe data menjadi Integer (int) agar selalu berupa angka valid untuk database
+$user_id = (int)$_COOKIE['user_id'];
 
 $query = $conn->query("SELECT * FROM users WHERE id = '$user_id'");
 if ($query && $query->num_rows > 0) {
