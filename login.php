@@ -1,9 +1,10 @@
 <?php
+ob_start(); // WAJIB ADA: Mencegah Vercel crash (HTTP2 Error) saat membuat cookie
 require 'koneksi.php';
 
-// Jika sudah ada cookie, langsung ke dashboard
+// Jika sudah ada cookie, langsung ke dashboard + Jurus Anti-Cache (Waktu Acak)
 if (!empty($_COOKIE['user_id'])) {
-    echo "<script>window.location.href = 'dashboard.php';</script>";
+    header("Location: dashboard.php?t=" . time());
     exit;
 }
 
@@ -21,25 +22,18 @@ if (isset($_POST['email']) && isset($_POST['password'])) {
     if ($result->num_rows > 0) {
         $user = $result->fetch_assoc();
         
-        // Cek password (Bisa untuk password yang di-hash maupun teks biasa)
+        // Cek password
         if (password_verify($password, $user['password']) || $password === $user['password']) {
             $uid = (string)$user['id'];
             $uname = (string)$user['username'];
             
-            // 1. BUAT COOKIE LEWAT PHP (Waktu kedaluwarsa 1 hari)
+            // 1. BUAT COOKIE MURNI LEWAT PHP 
             setcookie('user_id', $uid, time() + 86400, "/");
             setcookie('username', $uname, time() + 86400, "/");
             
-            // 2. BUAT COOKIE LEWAT JAVASCRIPT & PINDAH HALAMAN (Anti-Crash Vercel)
-            // 2. BUAT COOKIE LEWAT JAVASCRIPT & PINDAH HALAMAN (Anti-Crash Vercel)
-            echo "<script>
-                // Perkuat aturan cookie agar tidak diblokir oleh keamanan browser (SameSite=Lax)
-                document.cookie = 'user_id=$uid; path=/; max-age=86400; SameSite=Lax';
-                document.cookie = 'username=$uname; path=/; max-age=86400; SameSite=Lax';
-                
-                // JURUS ANTI-CACHE: Tambahkan kode waktu acak agar browser dipaksa memuat dashboard versi terbaru
-                window.location.href = 'dashboard.php?t=' + new Date().getTime();
-            </script>";
+            // 2. PINDAH HALAMAN LEWAT PHP (Dijamin stabil, cookie tersimpan sempurna)
+            // Ditambah time() agar link selalu baru dan lolos dari cache Vercel
+            header("Location: dashboard.php?t=" . time());
             exit;
         } else {
             $error = "Password salah!";
