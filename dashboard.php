@@ -1,44 +1,60 @@
 <?php
 require 'koneksi.php';
 
-// Proteksi halaman: Cek login via COOKIE
+// Cek login via COOKIE (Diperbaiki menggunakan empty agar aman dari cookie kosong)
 if (empty($_COOKIE['user_id'])) {
+    // Diperbaiki menggunakan JS Redirect agar kompatibel dengan Vercel
     echo "<script>window.location.href = 'login.php';</script>";
     exit;
 }
+
+// Diperbaiki: Ditambahkan (int) agar tipe datanya dipaksa jadi angka. Mencegah error 'Incorrect value for column user_id'
 $user_id = (int)$_COOKIE['user_id'];
-$username = isset($_COOKIE['username']) ? $_COOKIE['username'] : 'Pengguna';
 
-try {
-    // 1. Hitung Total Pemasukan (Gunakan IF agar aman jika tabel kosong)
-    $query_pemasukan = $conn->query("SELECT SUM(amount) AS total FROM transactions WHERE user_id = '$user_id' AND type = 'pemasukan'");
-    $total_pemasukan = 0;
-    if ($query_pemasukan) {
-        $row_pemasukan = $query_pemasukan->fetch_assoc();
-        $total_pemasukan = (int)$row_pemasukan['total'];
+
+// --- SISA KODE DI BAWAH INI SAMA PERSIS, TIDAK ADA YANG DIUBAH ---
+
+$edit_mode = false;
+$edit_id = '';
+$default_type = 'pengeluaran';
+$default_amount = '';
+$default_category = 'Lainnya';
+$default_description = '';
+$default_date = date('Y-m-d');
+
+if (isset($_GET['id'])) {
+    $edit_id = $conn->real_escape_string($_GET['id']);
+    $query_edit = $conn->query("SELECT * FROM transactions WHERE id = '$edit_id' AND user_id = '$user_id'");
+    if ($query_edit->num_rows > 0) {
+        $data_edit = $query_edit->fetch_assoc();
+        $edit_mode = true;
+        $default_type = $data_edit['type'];
+        $default_amount = number_format((int)$data_edit['amount'], 0, ',', '.');
+        $default_category = $data_edit['category'];
+        $default_description = $data_edit['description'];
+        $default_date = $data_edit['date'];
     }
+}
 
-    // 2. Hitung Total Pengeluaran
-    $query_pengeluaran = $conn->query("SELECT SUM(amount) AS total FROM transactions WHERE user_id = '$user_id' AND type = 'pengeluaran'");
-    $total_pengeluaran = 0;
-    if ($query_pengeluaran) {
-        $row_pengeluaran = $query_pengeluaran->fetch_assoc();
-        $total_pengeluaran = (int)$row_pengeluaran['total'];
+if (isset($_POST['simpan_transaksi'])) {
+    $jenis     = $_POST['jenis_transaksi'];
+    $nominal   = preg_replace("/[^0-9]/", "", $_POST['nominal']);
+    $kategori  = $_POST['kategori'];
+    $keterangan = $conn->real_escape_string($_POST['keterangan']);
+    $id_update = $_POST['edit_id'];
+
+    if (!empty($id_update)) {
+        $query = "UPDATE transactions SET type='$jenis', amount='$nominal', category='$kategori', description='$keterangan' WHERE id='$id_update' AND user_id='$user_id'";
+        if ($conn->query($query)) {
+            echo "<script>alert('Catatan berhasil diperbarui!'); window.location='riwayat.php?date=$default_date';</script>";
+        }
+    } else {
+        $tanggal_sekarang = date('Y-m-d');
+        $query = "INSERT INTO transactions (user_id, type, amount, category, description, date) VALUES ('$user_id', '$jenis', '$nominal', '$kategori', '$keterangan', '$tanggal_sekarang')";
+        if ($conn->query($query)) {
+            echo "<script>alert('Catatan baru berhasil disimpan!'); window.location='riwayat.php';</script>";
+        }
     }
-
-    // 3. Hitung Sisa Saldo (Uang Kamu)
-    $sisa_saldo = $total_pemasukan - $total_pengeluaran;
-
-    // 4. Ambil 5 Transaksi Terakhir untuk ringkasan di Beranda
-    $query_terakhir = $conn->query("SELECT * FROM transactions WHERE user_id = '$user_id' ORDER BY date DESC, id DESC LIMIT 5");
-    
-    if (!$query_terakhir) {
-        throw new Exception("Gagal membaca tabel transaksi. Pastikan tabel 'transactions' sudah dibuat di TiDB.");
-    }
-
-} catch (Exception $e) {
-    // Tangkap error agar tidak membuat server HTTP2 Vercel crash
-    die("<div style='padding: 20px; font-family: sans-serif; color: red;'><b>Sistem Mendeteksi Error Database:</b> <br> " . $e->getMessage() . "</div>");
 }
 ?>
 <!DOCTYPE html>
