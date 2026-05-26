@@ -1,10 +1,9 @@
 <?php
-ob_start();
 require 'koneksi.php';
 
-// Cek menggunakan COOKIE
+// Cek menggunakan COOKIE (Gunakan JS Redirect di sini juga untuk Vercel)
 if (isset($_COOKIE['user_id'])) {
-    header("Location: dashboard.php");
+    echo "<script>window.location.href = 'dashboard.php';</script>";
     exit;
 }
 
@@ -27,7 +26,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             setcookie('user_id',  (string)$user['id'],       time() + 86400, "/");
             setcookie('username', (string)$user['username'],  time() + 86400, "/");
             
-            header("Location: dashboard.php");
+            // SOLUSI VERCEL: GANTI header() menjadi JavaScript Redirect
+            echo "<script>window.location.href = 'dashboard.php';</script>";
             exit;
         } else {
             $error = "Password salah!";
