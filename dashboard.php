@@ -178,14 +178,14 @@ if (isset($_POST['simpan_transaksi'])) {
 
     <!-- BOTTOM NAV MOBILE -->
     <div class="md:hidden fixed bottom-6 left-6 right-6 bg-white/90 dark:bg-[#1e293b]/90 backdrop-blur-xl border border-white/40 dark:border-gray-700 rounded-3xl shadow-[0_20px_40px_-10px_rgba(0,0,0,0.15)] px-2 py-2 flex justify-between items-center z-50">
-        <a href="dashboard.php" class="flex flex-col items-center justify-center w-16 h-14 text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition">
-            <i class="fas fa-home text-xl mb-1"></i>
-            <span class="text-[10px] font-bold">Beranda</span>
-        </a>
-        <a href="pencatatan.php" class="flex flex-col items-center justify-center w-16 h-14 relative text-[#2a40a3] dark:text-blue-400">
+        <a href="dashboard.php" class="flex flex-col items-center justify-center w-16 h-14 relative text-[#2a40a3] dark:text-blue-400">
             <div class="absolute -top-2 w-8 h-1 bg-[#2a40a3] dark:bg-blue-400 rounded-b-full"></div>
-            <i class="fas fa-pen text-xl mb-1 mt-1"></i>
-            <span class="text-[10px] font-extrabold tracking-wide">Catat</span>
+            <i class="fas fa-home text-xl mb-1 mt-1"></i>
+            <span class="text-[10px] font-extrabold tracking-wide">Beranda</span>
+        </a>
+        <a href="pencatatan.php" class="flex flex-col items-center justify-center w-16 h-14 text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition">
+            <i class="fas fa-pen text-xl mb-1"></i>
+            <span class="text-[10px] font-bold">Catat</span>
         </a>
         <a href="riwayat.php" class="flex flex-col items-center justify-center w-16 h-14 text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition">
             <i class="fas fa-list text-xl mb-1"></i>
