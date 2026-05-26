@@ -1,7 +1,6 @@
 <?php
 require 'koneksi.php';
 
-// Cek menggunakan COOKIE (Gunakan JS Redirect di sini juga untuk Vercel)
 if (isset($_COOKIE['user_id'])) {
     echo "<script>window.location.href = 'dashboard.php';</script>";
     exit;
@@ -22,12 +21,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $user = $result->fetch_assoc();
         
         if (password_verify($password, $user['password'])) {
-            // Set COOKIE berlaku 1 hari (86400 detik)
-            setcookie('user_id',  (string)$user['id'],       time() + 86400, "/");
-            setcookie('username', (string)$user['username'],  time() + 86400, "/");
+            $uid = $user['id'];
+            $uname = $user['username'];
             
-            // SOLUSI VERCEL: GANTI header() menjadi JavaScript Redirect
-            echo "<script>window.location.href = 'dashboard.php';</script>";
+            // SOLUSI FINAL: Buat Cookie dan Redirect murni menggunakan JavaScript
+            echo "<script>
+                document.cookie = 'user_id=$uid; path=/; max-age=86400';
+                document.cookie = 'username=$uname; path=/; max-age=86400';
+                window.location.href = 'dashboard.php';
+            </script>";
             exit;
         } else {
             $error = "Password salah!";
