@@ -1,7 +1,7 @@
 <?php
 require 'koneksi.php';
 
-if (!empty($_COOKIE['user_id'])) {
+if (isset($_COOKIE['user_id'])) {
     echo "<script>window.location.href = 'dashboard.php';</script>";
     exit;
 }
