@@ -2,7 +2,7 @@
 require 'koneksi.php'; 
 
 // Proteksi halaman: Cek login via COOKIE (Mencegah user_id kosong & aman untuk Vercel)
-if (empty($_COOKIE['user_id'])) {
+if (isset($_COOKIE['user_id'])) {
     echo "<script>window.location.href = 'login.php';</script>";
     exit;
 }
