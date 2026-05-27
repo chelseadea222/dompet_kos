@@ -32,13 +32,7 @@ if (isset($_POST['email']) && isset($_POST['password'])) {
             setcookie('username', $uname, time() + 86400, "/");
             
             // 2. JURUS PAMUNGKAS ANTI-CACHE VERCEL
-            echo "<script>
-                document.cookie = 'user_id=$uid; path=/; max-age=86400; SameSite=Lax';
-                document.cookie = 'username=$uname; path=/; max-age=86400; SameSite=Lax';
-                
-                // Tambahkan waktu acak agar Vercel mengira ini halaman baru dan tidak memakai cache!
-                window.location.replace('dashboard.php?v=' + new Date().getTime());
-            </script>";
+            header("Location: dashboard.php");
             exit;
         } else {
             $error = "Password salah!";

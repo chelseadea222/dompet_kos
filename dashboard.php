@@ -1,11 +1,5 @@
 <?php 
 ob_start();
-
-// 3 BARIS INI WAJIB ADA AGAR VERCEL TIDAK MENGUNCI HALAMAN LOGIN
-header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
-header("Cache-Control: post-check=0, pre-check=0", false);
-header("Pragma: no-cache");
-
 require 'koneksi.php'; 
 
 // 1. Ambil ID dari Cookie
