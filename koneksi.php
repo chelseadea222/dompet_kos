@@ -1,20 +1,13 @@
 <?php
-$host = "gateway01.ap-southeast-1.prod.alicloud.tidbcloud.com"; 
-$user = "48D8BJbofbESMRv.root";
-$pass = "mmL6yn2glnKqUVZA";
-$db   = "dompetkos"; 
-$port = 4000;
+// Ganti data di bawah ini sesuai dengan yang ada di Client Area InfinityFree Anda
+$host     = "sql200.infinityfree.com"; // Contoh: sql123.infinityfree.com
+$username = "if0_42028643";            // Username dari InfinityFree
+$password = "FVCHI0hlb8eBZII";    // Password akun InfinityFree
+$database = "if0_42028643_dompetkos";  // Nama database yang Anda buat di cPanel InfinityFree
 
-// 1. Inisialisasi koneksi MySQLi
-$conn = mysqli_init();
+$conn = mysqli_connect($host, $username, $password, $database);
 
-// 2. Beritahu PHP untuk menggunakan SSL (Wajib untuk TiDB)
-$conn->ssl_set(NULL, NULL, NULL, NULL, NULL);
-
-// 3. Lakukan koneksi sebenarnya dengan flag MYSQLI_CLIENT_SSL
-$berhasil = $conn->real_connect($host, $user, $pass, $db, $port, NULL, MYSQLI_CLIENT_SSL);
-
-// Cek apakah koneksi berhasil
-if (!$berhasil) {
+if (!$conn) {
     die("Koneksi database gagal: " . mysqli_connect_error());
 }
+?>
